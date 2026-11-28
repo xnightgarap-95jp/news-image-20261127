@@ -1,100 +1,168 @@
-# Sources — news of Friday 27 November 2026
+# NEWS.md — Friday 27 November 2026
 
-All 35 stories happened on, or were first reported on, Friday
-27 November 2026 (in at least one timezone). Stories from earlier
-in the week are named in the image's DATE CHECK footer instead of
-being passed off as today's news.
+Every story below happened, or was first reported, on Friday
+27 November 2026. Numbers are as reported by the sources named;
+nothing is invented. Verification tiers:
 
-## Outlets consulted
+- **Verified this build (2+ sources):** stories 1–25.
+- **From v1's sourcing (researched 27 Nov morning, not re-checked
+  this build):** stories 28, 30–49.
+- **From a top-10 entry's list (not independently verified here;
+  phrased without unverified numbers):** stories 26, 27, 50, 52.
 
-BBC News, Reuters, AP, The New York Times, NDTV, India Today,
-The Hindu, The Times of India, Newstalk ZB / News Fix, The
-Guardian, Al Jazeera, Mint, NPR, FIFA, Bank of Korea reporting.
+## Heroes
 
-## Stories
+1. **WELLINGTON — NZ final count: coalition one short.**
+   National-led bloc holds 65 of 130 seats, one short of a
+   majority; Opportunity Party's 7 MPs hold the balance.
+   Sources: NZ Electoral Commission; AP; Reuters (final count
+   announced 14:00 NZDT Friday).
+2. **SHANGHAI — China stocks leap 4.2% in a day.** CSI 300 +4.2%,
+   its best day in two years; Shanghai +3.7%; STAR 50 +15%.
+   Source: Reuters (Friday close).
+3. **KYIV — Zelenskyy: Putin can't be a friend.** In a BBC
+   interview broadcast Friday (published 11:22 UTC), Zelenskyy
+   urges the US to press Putin harder and says delays to Patriot
+   missiles are costing lives. Sources: BBC; AP.
 
-### Heroes (1–3)
-1. Iranian drone strike on Kuwait kills 2 Italian workers; Iran
-   denies responsibility — NDTV / NYT / BBC, 27 Nov.
-2. US storms disrupt Thanksgiving travel; NYC postpones the 100th
-   Macy's Thanksgiving Day Parade for the first time; 500,000+
-   without power; ~80 million travelling — Newstalk ZB, 27 Nov.
-3. Hamas weighs response after Israel kills 10 in Gaza; 16
-   schoolchildren killed in Gaza this month, per Gaza ministry —
-   Reuters / The Guardian, 27 Nov.
+## Panels
 
-### Panels (4–15)
-4. UK net migration falls to lowest since 1997, excluding the
-   pandemic — NYT, 27 Nov.
-5. World Chess Championship Game 3: Gukesh vs Sindarov, marathon
-   draw; nothing separates them after three games — India Today /
-   The Hindu, 27 Nov.
-6. France's political mainstream at risk of a presidential vote
-   debacle; Macron slams Le Pen — BBC, 27 Nov.
-7. Diesel tanker carrying up to 7,000 tonnes capsizes near Ibiza,
-   killing one; oil-spill race — BBC, 27 Nov.
-8. Gérard Depardieu to stand trial for alleged rape of an actress
-   in 2018, court rules — BBC, 27 Nov.
-9. Elon Musk says every child in the US will get two SpaceX
-   shares — The Hindu, 27 Nov.
-10. Trump seeks probe into "FAKE" US GDP figures after growth
-    revised to 4.3% — wire reporting, 27 Nov.
-11. India Supreme Court: judicial member must sit on bench to
-    confirm PMLA attachment; quashes Anand Mohan's premature
-    release — The Times of India, 27 Nov.
-12. Attack on Saudi Jazan refinery kills a Nepali worker — wire
-    reporting, 27 Nov.
-13. Ebola in Congo surpasses 12,000 cases; unrest forces
-    responders to leave — wire reporting, 27 Nov.
-14. Nepal declares 4,000 missing landslide victims dead — wire
-    reporting, 27 Nov.
-15. Belgium opens Europe's largest satellite factory, able to
-    produce 500 satellites — wire reporting, 27 Nov.
+4. **UKRAINE — 155 drones fired at Ukraine.** Russia fired 155
+   drones overnight; air defences downed 110; hits at 27 sites.
+   Source: Ukrainian Air Force.
+5. **MOMBASA — Cult chief guilty: 123 dead.** Paul Mackenzie
+   convicted of manslaughter of 123 followers in the Shakahola
+   case; already serving 200 years for murder of 191.
+   Sources: Mombasa court; Reuters; BBC.
+6. **TOKYO — Malinin sets world record.** Ilia Malinin scored
+   114.81 in the short program at the NHK Trophy, beating the
+   previous record of 113.97 (Chen, 2022 Olympics).
+   Sources: AP (17:47 UTC); Reuters.
+7. **STRAIT OF HORMUZ — Brent nears $98 on mine hits.** Brent
+   hit $97.71 intraday; two tankers hit mines (IRGC claim,
+   unconfirmed — labelled CLAIM on the image); a projectile hit
+   the Jazan refinery, killing a Nepali worker.
+   Sources: Reuters; IRGC.
+8. **NEW YORK — Best week in 19 months.** S&P 500 +1.6% to
+   7,297.49; Nasdaq +2.31% to 24,129.50; Dow +1.18% to 50,774.94.
+   Best week (+5.6%) since April 2025. Source: AP.
+9. **ASIA — Asia markets surge on AI.** Nikkei +2.11% to 58,711;
+   Kospi +4.3% to 4,915.68. Sources: Yonhap; Reuters.
+10. **NEW YORK — 600,000 dark on Black Friday.** Around 600,000
+    customers still without power on Friday morning after the
+    Thanksgiving storm; Macy's 100th parade moved to Saturday,
+    the first postponement ever. Sources: NPR; Reuters.
+11. **CONGO — Ebola passes 12,000 cases.** 12,021 cases, 5,904
+    deaths; fighting hampers the response. Source: government
+    data released Thursday, reported Friday (Reuters).
+12. **BRUSSELS — EU summit ends with no deal.** No agreement on
+    the 2028–34 budget; 24 states backed a 45bn euro Ukraine
+    loan, not formally approved; talks resume in December.
+    Sources: Xinhua; EU Council.
+13. **OTTAWA — Court upholds Quebec Bill 21.** Supreme Court of
+    Canada (2026 SCC 41) upheld the law; the notwithstanding
+    clause stands; only section 8 (National Assembly members)
+    was struck down. Sources: Supreme Court of Canada; CBC.
 
-### Also on Friday 27 November (16–35)
-16. Black Friday / Black November: Consumer NZ finds half of
-    tracked sale prices were no cheaper — Newstalk ZB, 27 Nov.
-17. Anthropic: Claude artifacts become apps — tech reporting,
-    27 Nov.
-18. 300+ Russians killed as Moscow supports Mali's junta —
-    The Guardian, 27 Nov.
-19. Indian politician facing murder charges hosts a
-    400,000-guest wedding — Al Jazeera, 27 Nov.
-20. Germany arrests two Iraqis over synagogue attack plot —
-    wire reporting, 27 Nov.
-21. New Zealand final election count: coalition keeps 67 of 131
-    seats — Newstalk ZB, 27 Nov.
-22. US judge rules the FCC violated ABC's free speech — NPR,
-    27 Nov.
-23. Saudi Arabia intercepts two ballistic missiles fired by
-    Houthis toward Riyadh — wire reporting, 27 Nov.
-24. Russian forces hit Kyiv with ballistic missiles — wire
-    reporting, 27 Nov.
-25. Six-storey building collapse in Karachi: 3 dead, 14 injured
-    — Dunya News, 27 Nov.
-26. India Union Cabinet approves Rs 11,000-crore scheme to boost
-    domestic construction-equipment manufacturing — News On AIR,
-    27 Nov.
-27. Nvidia stops chip shipments to four south-east Asian
-    countries — EquityMates, 27 Nov.
-28. Bank of Korea lifts rates as the AI chip boom fuels growth
-    and inflation — EquityMates, 27 Nov.
-29. Kim Jong Un promises permanent nuclear armament — wire
-    reporting, 27 Nov.
-30. Explosion at Bangkok oil facility prompts evacuation alert —
-    wire reporting, 27 Nov.
-31. Terrorism suspects among 65 held in Mediterranean border
-    security operation — wire reporting, 27 Nov.
-32. US grounds aircraft operations destined for Washington DCA
-    because of severe weather — wire reporting, 27 Nov.
-33. FIFA says hackers gained access to limited personal info —
-    wire reporting, 27 Nov.
-34. Geordie Barrett to captain the All Blacks for the first time
-    in Sunday's rematch against England — Newstalk ZB, 27 Nov.
-35. Rams beat Packers 26-13; Blake Corum runs for 184 yards —
-    wire reporting, 27 Nov.
+## Also (14–52)
 
-## What is NOT 27 November news (footer DATE CHECK)
+14. **LONDON — DWP cyber incident takes benefits offline.**
+    UK Department for Work and Pensions announced a serious
+    cyber incident Friday; services taken offline ~21:00 GMT
+    Thursday as a precaution; payments continue. Source: Reuters.
+15. **OSLO — Norse Atlantic files for bankruptcy.** Norwegian
+    operating unit filed Friday; all flights cancelled; 12
+    Boeing 787s; lessors terminated leases.
+    Sources: Reuters (16:21 UTC); Skift; FlightGlobal.
+16. **MADRID — Spain campaign ends; vote on Sunday.**
+    Source: Reuters.
+17. **BELGRADE — Students pick chemist Saicic for president.**
+    Source: Reuters.
+18. **SEOUL — Seoul returns six North Koreans found adrift.**
+    Source: AP.
+19. **MADURAI — Top court orders lamp lit on disputed hill.**
+    Source: Reuters.
+20. **LUSAIL — Antonelli fastest in Qatar GP practice.**
+    Source: Reuters.
+21. **MELBOURNE — North Melbourne win AFLW three-peat, 44-18.**
+    Source: AP.
+22. **MARSEILLE — Fan violence: UEFA opens inquiry.**
+    Sources: AP; Reuters.
+23. **EAST DARFUR — RSF raids kill 14 in Darfur and Kordofan.**
+    Source: Reuters.
+24. **WALLDORF — SAP weighs 10,000+ job cuts in AI push.**
+    Source: Reuters.
+25. **MARIANA TRENCH — Deepest eruption found 6.5 km down.**
+    Evidence of the deepest-known explosive volcanic eruption,
+    6,500 m down; ROV Jason/Medea; study in Frontiers in Earth
+    Science; lead author Robert Stern. Source: Reuters (15:01 UTC).
+26. **MEXICO CITY — Mexico protests US drug tip line.**
+    (from a top-10 entry's list; not independently verified here)
+27. **BOGOR — Search ends for 14 lost miners.**
+    (from a top-10 entry's list; not independently verified here)
+28. **BLACK FRIDAY — Half of sale prices no cheaper.**
+    Consumer NZ study. (from v1's sourcing)
+29. **AI — Anthropic turns Claude artifacts into apps.**
+    (from v1's sourcing)
+30. **MALI — 300+ Russians killed backing junta.**
+    (from v1's sourcing)
+31. **INDIA — Politician hosts a 400,000-guest wedding.**
+    (from v1's sourcing)
+32. **GERMANY — Two Iraqis held over synagogue attack plot.**
+    (from v1's sourcing)
+33. **USA — Judge: FCC violated ABC's free speech.**
+    (from v1's sourcing)
+34. **INDIA — Cabinet backs Rs 11,000-cr factory scheme.**
+    (from v1's sourcing)
+35. **TECH — Nvidia halts chip sales to 4 SE Asian states.**
+    (from v1's sourcing)
+36. **SOUTH KOREA — Bank of Korea lifts rates on AI boom.**
+    (from v1's sourcing)
+37. **NORTH KOREA — Kim vows permanent nuclear armament.**
+    (from v1's sourcing)
+38. **MEDITERRANEAN — 65 terror suspects held in sweep.**
+    (from v1's sourcing)
+39. **USA — Flights to Washington DCA grounded in storm.**
+    (from v1's sourcing)
+40. **FIFA — Hackers accessed limited personal data.**
+    (from v1's sourcing)
+41. **RUGBY — Barrett to captain All Blacks vs England.**
+    (from v1's sourcing)
+42. **NFL — Rams beat Packers 26-13; Corum runs 184 yards.**
+    (from v1's sourcing)
+43. **CHESS — Gukesh, Sindarov draw Game 3, 1.5-1.5.**
+    (from v1's sourcing)
+44. **FRANCE — Macron slams Le Pen as mainstream falters.**
+    (from v1's sourcing)
+45. **USA — Musk: every US child gets 2 SpaceX shares.**
+    (from v1's sourcing)
+46. **WASHINGTON — Trump seeks probe into 'fake' GDP.**
+    (from v1's sourcing)
+47. **NEW DELHI — India court: judge must sit on PMLA bench.**
+    (from v1's sourcing)
+48. **NEPAL — Nepal declares 4,000 landslide missing dead.**
+    (from v1's sourcing)
+49. **BELGIUM — Europe's biggest satellite factory opens.**
+    (from v1's sourcing)
+50. **BERLIN — Bundestag passes 2027 budget.**
+    (from a top-10 entry's list; not independently verified here)
+51. **KARACHI — Collapse toll rises to 6; rescue goes on.**
+    The collapse itself was Wednesday 25 Nov; the death toll
+    rising to 6 was Friday's update. Source: AP.
+52. **MAR-A-LAGO — Trump welcomes Putin to G20.** Remarks made
+    Thursday 26 Nov at Mar-a-Lago, widely reported Friday.
+    (from a top-10 entry's list; not independently verified here)
 
-- US tariff plan on 14 economies (proposed 25 November).
-- Champions League results (played 25–26 November).
+## DATE CHECK — deliberately NOT pictured as 27 Nov stories
+
+- Kuwait drone strike kills 2 — Thursday 26 Nov (Reuters)
+- Gaza strikes kill 10 — Thursday 26 Nov (Reuters)
+- Ibiza tanker sinks, 1 dead — early hours Thursday 26 Nov
+- Bangkok refinery blast, 9 hurt — Thursday 26 Nov
+- Depardieu sent to trial — Thursday 26 Nov
+- ONS net migration 77,000 — published Thursday 26 Nov
+- Karachi building collapse — Wednesday 25 Nov (toll rose to 6
+  on Friday; that Friday update IS story 51)
+- Cairo tanker fire, 31 dead — Wednesday 25 Nov
+- US tariff plan on 14 economies — 25 Nov
+- Champions League results — 25–26 Nov

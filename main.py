@@ -2,12 +2,13 @@
 """Sum up the world's news of Friday 27 November 2026 in one image.
 
 A Python 3.13 standard-library-only program. It draws a one-page
-newspaper front page -- masthead with the day's date, a headline
-ticker, a region strip, five key figures, three hero stories with
-flat vector scenes, twelve smaller story panels, a world map with
-the stories pinned, a numbered list of twenty more stories, and a
-date-check footer -- and writes it to /output/entry.png (or
-$MAKEFUN_OUTPUT_DIR/entry.png, or the directory given as argv[1]).
+newspaper front page -- masthead naming the day, a ticker, a strip
+of six key figures, a region strip, a UTC wire-times strip, three
+hero stories with flat vector scenes, ten more pictured panels,
+a dotted world map with the pictured stories pinned, a list of 39
+more stories, and a date-check footer -- and writes it to
+/output/entry.png (or $MAKEFUN_OUTPUT_DIR/entry.png, or the
+directory given as argv[1]).
 
 Everything is drawn from scratch in this file: a hand-made 5x7
 pixel font, a tiny raster canvas with rect / circle / line /
@@ -15,13 +16,26 @@ polygon fills, flat vector scenes for each story, and a minimal
 PNG encoder (zlib + struct). No network, no randomness, no clock:
 two runs write byte-identical files.
 
-The 35 stories were gathered from the morning wires of Friday
-27 November 2026 (BBC, Reuters, AP, New York Times, NDTV, India
-Today, The Hindu, Newstalk ZB) and are listed with their sources
-in NEWS.md. Only events that happened, or were first reported, on
-Friday 27 November 2026 in some time zone are counted as the
-day's news; bigger stories that belong to earlier days are named
-in the footer's DATE CHECK instead of being passed off as today's.
+The 52 stories were gathered from the wires of Friday 27 November
+2026 (AP, Reuters, BBC, New York Times, Electoral Commission of
+New Zealand, Bank of Japan data via Yonhap, and others) and are
+listed with their sources in NEWS.md. Only events that happened,
+or were first reported, on Friday 27 November 2026 in some time
+zone are counted as the day's news. Stories that belong to earlier
+days -- the Kuwait drone strike, the Gaza strikes, the Ibiza
+tanker, the Bangkok refinery blast, the Depardieu trial, the ONS
+migration release -- are named in the footer's DATE CHECK instead
+of being passed off as today's. The v1 entry for this same day
+led with the Kuwait strike, the Thanksgiving storm peak and the
+Gaza strikes, all Thursday 26 November events; this rebuild
+replaces them with stories that are unambiguously Friday's: the
+New Zealand final count, the China stock surge, the Zelenskyy
+BBC interview, the 155-drone night, the Mackenzie verdict, the
+Malinin world record, and Friday's market closes.
+
+Scenes are clipped to their own panel box by construction: the
+canvas carries a clip rectangle while a scene draws, so no scene
+can paint over the panel above it.
 """
 
 import os
@@ -172,15 +186,32 @@ class Canvas:
     def __init__(self, w, h, bg):
         self.w, self.h = w, h
         self.px = bytearray(bg) * (w * h)
+        self.clip = None  # (x0, y0, x1, y1) or None: nothing may paint outside
+
+    def set_clip(self, x, y, w, h):
+        self.clip = (x, y, x + w, y + h)
+
+    def clear_clip(self):
+        self.clip = None
+
+    def _in_clip(self, x, y):
+        if self.clip is None:
+            return True
+        x0, y0, x1, y1 = self.clip
+        return x0 <= x < x1 and y0 <= y < y1
 
     def set(self, x, y, c):
-        if 0 <= x < self.w and 0 <= y < self.h:
+        if 0 <= x < self.w and 0 <= y < self.h and self._in_clip(x, y):
             i = (y * self.w + x) * 3
             self.px[i:i + 3] = bytes(c)
 
     def rect(self, x, y, w, h, c):
         x0, y0 = max(0, x), max(0, y)
         x1, y1 = min(self.w, x + w), min(self.h, y + h)
+        if self.clip is not None:
+            cx0, cy0, cx1, cy1 = self.clip
+            x0, y0 = max(x0, cx0), max(y0, cy0)
+            x1, y1 = min(x1, cx1), min(y1, cy1)
         for yy in range(y0, y1):
             i = (yy * self.w + x0) * 3
             self.px[i:i + (x1 - x0) * 3] = bytes(c) * (x1 - x0)
@@ -294,274 +325,293 @@ def png_bytes(cv):
 
 
 # ---------------------------------------------------------------- scenes
-# Flat vector pictograms, one per story kind. Each draws inside the
-# box (x, y, w, h) and never outside it.
+# Flat vector pictograms. Each draws inside the box (x, y, w, h).
+# The caller sets a clip to the box first, so a scene physically
+# cannot paint outside it even if its maths overshoots.
 
-def scene_drone(cv, x, y, w, h):
-    cv.rect(x, y, w, h, (31, 44, 66))
-    cv.circle(x + w // 4, y + h // 4, 16, (210, 205, 190))
-    cv.circle(x + 3 * w // 4, y + h // 4, 12, (210, 205, 190))
-    # explosion burst, right side
-    ex, ey = x + int(w * 0.72), y + int(h * 0.62)
-    for dx, dy, r in ((0, 0, 16), (-18, -8, 9), (16, -10, 8),
-                      (-12, 12, 8), (18, 10, 9), (0, -20, 7)):
-        cv.circle(ex + dx, ey + dy, r, (232, 120, 30))
-    cv.circle(ex, ey, 8, (255, 210, 90))
-    # drone body + arms + rotors
-    dx0, dy0 = x + w // 2 - 34, y + h // 2 - 8
-    cv.rect(dx0, dy0, 68, 16, (20, 20, 20))
-    cv.rect(dx0 - 26, dy0 - 4, 26, 4, (20, 20, 20))
-    cv.rect(dx0 + 68, dy0 - 4, 26, 4, (20, 20, 20))
-    cv.circle(dx0 - 28, dy0 - 2, 7, (200, 200, 200))
-    cv.circle(dx0 + 96, dy0 - 2, 7, (200, 200, 200))
-    cv.rect(dx0 + 26, dy0 + 5, 16, 6, (176, 42, 30))
-    # ground + flag pole
-    cv.rect(x, y + h - 14, w, 14, (120, 96, 66))
-    cv.vline(x + 26, y + h - 52, 40, (240, 240, 240), 3)
-    cv.rect(x + 29, y + h - 52, 26, 14, (0, 122, 61))
+def scene_parliament(cv, x, y, w, h):
+    cv.rect(x, y, w, h, (222, 228, 232))
+    # hemicycle of seats: 65 of 130 filled one colour, rest another
+    cx, cy = x + w // 2, y + h - 6
+    for ring, r in ((0, 78), (1, 62), (2, 46)):
+        n = 26 - ring * 4
+        for i in range(n):
+            ang = 3.14159 * (i + 0.5) / n
+            px = int(cx + r * 1.9 * (0.5 - ang / 3.14159) * 2)
+            py = int(cy - r * 0.62 * (1 - abs(i - n / 2) / (n / 2)) ** 0.5
+                     - 6)
+            col = (20, 38, 74) if (ring * 26 + i) < 65 else (176, 42, 30)
+            cv.circle(px, py, 3, col)
+    cv.rect(x + w // 2 - 40, y + h - 14, 80, 6, (20, 38, 74))
+    cv.text(x + 8, y + 6, "65 / 130", INK, 2, True)
+    cv.text(x + w - 78, y + 6, "66 NEEDED", RED, 1, True)
 
 
-def scene_storm(cv, x, y, w, h):
-    cv.rect(x, y, w, h, (58, 74, 96))
-    # rain
-    for i in range(26):
-        rx = x + 8 + (i * 37) % (w - 16)
-        ry = y + 6 + (i * 23) % (h - 30)
-        cv.line(rx, ry, rx - 5, ry + 12, (180, 200, 220))
-    # clouds
-    for cx, cy, r in ((70, 26, 22), (110, 20, 26), (150, 28, 20),
-                      (240, 24, 24), (280, 30, 18)):
-        cv.circle(x + cx, y + cy, r, (210, 214, 220))
-    # parade balloon: big oval + basket, tilted by the wind
-    cv.ellipse(x + w // 2, y + h // 2 + 6, 62, 34, (232, 120, 30))
-    cv.ellipse(x + w // 2, y + h // 2 + 6, 44, 22, (255, 210, 90))
-    cv.rect(x + w // 2 - 12, y + h // 2 + 42, 24, 12, (120, 72, 30))
-    cv.line(x + w // 2 - 30, y + h // 2 + 38, x + w // 2 - 10,
-            y + h // 2 + 42, (40, 40, 40))
-    cv.line(x + w // 2 + 30, y + h // 2 + 38, x + w // 2 + 10,
-            y + h // 2 + 42, (40, 40, 40))
-    # street
-    cv.rect(x, y + h - 12, w, 12, (40, 40, 44))
-    cv.text(x + 8, y + h - 30, "100th PARADE POSTPONED", (255, 255, 255), 1, True)
+def scene_market(cv, x, y, w, h):
+    cv.rect(x, y, w, h, (16, 32, 58))
+    # skyline
+    for bx, bw, bh in ((8, 26, 46), (40, 20, 62), (66, 30, 38),
+                       (102, 18, 70), (126, 24, 52), (156, 28, 44),
+                       (190, 22, 66), (218, 26, 40), (248, 24, 56),
+                       (278, 22, 34)):
+        cv.rect(x + bx, y + h - 12 - bh, bw, bh, (70, 90, 130))
+        for wy in range(y + h - 8 - bh, y + h - 12, 8):
+            cv.rect(x + bx + 4, wy, 4, 4, (255, 210, 90))
+    # rising chart
+    cv.line(x + 10, y + h - 20, x + w - 60, y + 18, (0, 200, 120))
+    cv.line(x + w - 60, y + 18, x + w - 60, y + 30, (0, 200, 120))
+    cv.line(x + w - 60, y + 18, x + w - 72, y + 18, (0, 200, 120))
+    cv.text(x + w - 108, y + 6, "+4.2%", (0, 200, 120), 2, True)
 
 
-def scene_rubble(cv, x, y, w, h):
-    cv.rect(x, y, w, h, (214, 190, 150))
-    cv.rect(x, y, w, 34, (94, 110, 140))
-    cv.circle(x + 52, y + 18, 12, (255, 220, 130))
-    # standing and broken buildings
-    cv.rect(x + 20, y + 52, 46, h - 66, (90, 84, 76))
-    cv.rect(x + 76, y + 72, 40, h - 86, (120, 112, 100))
-    cv.poly([(x + 130, y + h - 14), (x + 130, y + 92), (x + 178, y + 60),
-             (x + 196, y + h - 14)], (70, 64, 56))
-    cv.rect(x + 210, y + 60, 44, h - 74, (100, 92, 82))
-    cv.rect(x + 264, y + 84, 40, h - 98, (130, 122, 110))
-    # windows
-    for bx, by in ((28, 60), (44, 60), (28, 78), (84, 80), (218, 68),
-                   (234, 68), (272, 92)):
-        cv.rect(x + bx, y + by, 7, 9, (255, 220, 130))
-    # smoke
-    for sx, sy, r in ((150, 66, 12), (168, 54, 15), (186, 68, 10)):
-        cv.circle(x + sx, y + sy, r, (150, 146, 138))
-    cv.rect(x, y + h - 14, w, 14, (70, 64, 56))
+def scene_interview(cv, x, y, w, h):
+    cv.rect(x, y, w, h, (36, 68, 120))
+    cv.rect(x, y, w, h // 2, (0, 90, 180))
+    cv.rect(x, y + h // 2, w, h - h // 2, (255, 210, 60))
+    # desk + two microphones
+    cv.rect(x + w // 2 - 70, y + h - 34, 140, 26, (90, 60, 30))
+    cv.rect(x + w // 2 - 70, y + h - 38, 140, 4, (120, 84, 44))
+    for mx in (x + w // 2 - 44, x + w // 2 + 34):
+        cv.line(mx, y + h - 38, mx + 8, y + h - 62, INK)
+        cv.circle(mx + 9, y + h - 64, 6, INK)
+    # speaker silhouette
+    cv.circle(x + w // 2, y + h - 62, 12, (30, 30, 30))
+    cv.rect(x + w // 2 - 16, y + h - 52, 32, 16, (30, 30, 30))
+    cv.text(x + 8, y + 6, "BBC", WHITE, 2, True)
+    cv.text(x + w - 130, y + 6, "KYIV", WHITE, 1, True)
 
 
 def scene_mini(cv, kind, x, y, w, h):
-    """Small pictogram strip for the twelve grid panels."""
-    bg = {"chart_down": (226, 232, 238), "chess": (232, 226, 210),
-          "podium": (238, 226, 222), "tanker": (210, 226, 236),
-          "court": (232, 228, 218), "rocket": (214, 226, 238),
-          "chart_up": (226, 236, 224), "scales": (232, 230, 220),
-          "flame": (244, 224, 210), "virus": (228, 234, 226),
-          "mountain": (228, 226, 214), "satellite": (216, 222, 236)}[kind]
+    """Small pictogram strip for the ten grid panels."""
+    bg = {"drones": (24, 30, 44), "court": (232, 228, 218),
+          "skater": (214, 230, 240), "tanker": (210, 226, 236),
+          "chart_up": (226, 236, 224), "asia": (232, 230, 214),
+          "storm": (58, 74, 96), "virus": (228, 234, 226),
+          "eu": (20, 38, 74), "pillars": (232, 226, 210)}[kind]
     cv.rect(x, y, w, h, bg)
-    if kind == "chart_down":
-        cv.line(x + 8, y + 8, x + w - 8, y + h - 8, RED)
-        cv.line(x + w - 8, y + h - 8, x + w - 8, y + h - 18, RED)
-        cv.line(x + w - 8, y + h - 8, x + w - 18, y + h - 8, RED)
-        cv.text(x + 8, y + h - 14, "-6.2%", INK, 1, True)
-    elif kind == "chess":
-        for r in range(4):
-            for c in range(8):
-                if (r + c) % 2 == 0:
-                    cv.rect(x + 8 + c * 18, y + 2 + r * 8, 18, 8, INK)
-        cv.text(x + 8, y + h - 14, "GAME 3 DRAW", INK, 1, True)
-    elif kind == "podium":
-        cv.rect(x + 14, y + h - 18, 34, 18, (176, 42, 30))
-        cv.rect(x + 56, y + h - 26, 34, 26, (20, 38, 74))
-        cv.rect(x + 98, y + h - 12, 34, 12, (110, 108, 100))
-        cv.text(x + 8, y + 4, "NO CLEAR", INK, 1, True)
-        cv.text(x + 8, y + 14, "WINNER", INK, 1, True)
-    elif kind == "tanker":
-        cv.poly([(x + 20, y + h - 12), (x + 30, y + 12), (x + 130, y + 22),
-                 (x + 140, y + h - 12)], (60, 60, 66))
-        cv.rect(x, y + h - 12, w, 12, (40, 90, 130))
-        cv.text(x + 8, y + 4, "7,000 T", INK, 1, True)
+    if kind == "drones":
+        for dx, dy in ((30, 8), (90, 6), (150, 10)):
+            cv.rect(x + dx, y + dy + 4, 22, 4, (200, 200, 200))
+            cv.circle(x + dx - 2, y + dy + 6, 3, (200, 200, 200))
+            cv.circle(x + dx + 24, y + dy + 6, 3, (200, 200, 200))
+        cv.circle(x + w - 30, y + h - 10, 6, (232, 120, 30))
+        cv.circle(x + w - 30, y + h - 10, 3, (255, 210, 90))
+        cv.text(x + 6, y + h - 12, "155", WHITE, 1, True)
     elif kind == "court":
-        for cx in (24, 62, 100, 138):
-            cv.rect(x + cx, y + 8, 8, h - 20, (120, 108, 84))
-        cv.rect(x + 10, y + 4, 146, 6, (120, 108, 84))
-        cv.rect(x + 10, y + h - 12, 146, 6, (120, 108, 84))
-    elif kind == "rocket":
-        cv.tri(x + 78, y + 2, x + 66, y + 26, x + 90, y + 26, (220, 60, 40))
-        cv.rect(x + 70, y + 24, 16, 8, (240, 240, 240))
-        cv.tri(x + 70, y + 30, x + 78, y + 30, x + 78, y + 40, (255, 180, 60))
-        cv.text(x + 8, y + h - 14, "2 SHARES", INK, 1, True)
+        cv.vline(x + w // 2, y + 4, h - 10, INK, 2)
+        cv.hline(x + 24, y + 8, w - 48, INK, 2)
+        cv.tri(x + 30, y + 10, x + 48, y + 10, x + 39, y + 22, INK)
+        cv.tri(x + w - 50, y + 10, x + w - 32, y + 10, x + w - 41, y + 22, INK)
+        cv.text(x + 6, y + h - 12, "123", RED, 1, True)
+    elif kind == "skater":
+        cv.rect(x, y + h - 8, w, 8, (255, 255, 255))
+        cv.line(x + w // 2, y + 6, x + w // 2 - 8, y + h - 12, INK)
+        cv.line(x + w // 2, y + 6, x + w // 2 + 12, y + h - 16, INK)
+        cv.circle(x + w // 2 + 2, y + 4, 4, INK)
+        cv.line(x + w // 2 - 8, y + h - 12, x + w // 2 + 16, y + h - 12, INK)
+        cv.text(x + 6, y + 4, "114.81", RED, 1, True)
+    elif kind == "tanker":
+        cv.poly([(x + 20, y + h - 10), (x + 30, y + 10), (x + 130, y + 16),
+                 (x + 140, y + h - 10)], (60, 60, 66))
+        cv.rect(x, y + h - 10, w, 10, (40, 90, 130))
+        cv.circle(x + w - 24, y + 8, 5, (232, 120, 30))
+        cv.circle(x + w - 40, y + 12, 4, (232, 120, 30))
+        cv.text(x + 6, y + 4, "$97.71", INK, 1, True)
     elif kind == "chart_up":
         cv.line(x + 8, y + h - 8, x + w - 8, y + 8, (0, 122, 61))
         cv.line(x + w - 8, y + 8, x + w - 8, y + 18, (0, 122, 61))
         cv.line(x + w - 8, y + 8, x + w - 18, y + 8, (0, 122, 61))
-        cv.text(x + 8, y + 4, "4.3%", INK, 1, True)
-    elif kind == "scales":
-        cv.vline(x + w // 2, y + 4, h - 14, INK, 2)
-        cv.hline(x + 20, y + 8, w - 40, INK, 2)
-        cv.tri(x + 26, y + 10, x + 44, y + 10, x + 35, y + 22, INK)
-        cv.tri(x + w - 46, y + 10, x + w - 28, y + 10, x + w - 37, y + 22, INK)
-    elif kind == "flame":
-        cv.tri(x + w // 2, y + 2, x + w // 2 - 16, y + 22,
-               x + w // 2 + 16, y + 22, (232, 120, 30))
-        cv.tri(x + w // 2, y + 12, x + w // 2 - 10, y + 26,
-               x + w // 2 + 10, y + 26, (255, 180, 60))
-        cv.rect(x + 12, y + h - 12, w - 24, 8, (90, 84, 76))
+        cv.text(x + 6, y + 4, "+1.6%", (0, 122, 61), 1, True)
+    elif kind == "asia":
+        for i, bh in enumerate((10, 16, 22, 28)):
+            cv.rect(x + 14 + i * 26, y + h - 8 - bh, 16, bh,
+                    (0, 122, 61) if i > 1 else (110, 108, 100))
+        cv.line(x + 8, y + h - 16, x + w - 8, y + 6, (176, 42, 30))
+        cv.text(x + 6, y + 4, "+2.1% +4.3%", INK, 1, True)
+    elif kind == "storm":
+        for cx, cy, r in ((50, 10, 10), (70, 8, 12), (90, 10, 9)):
+            cv.circle(x + cx, y + cy, r, (210, 214, 220))
+        for i in range(10):
+            rx = x + 120 + (i * 7) % 60
+            ry = y + 4 + (i * 11) % 18
+            cv.line(rx, ry, rx - 3, ry + 7, (180, 200, 220))
+        cv.ellipse(x + 46, y + h // 2 + 2, 26, 12, (232, 120, 30))
+        cv.rect(x + 38, y + h - 8, 16, 6, (120, 72, 30))
+        cv.text(x + 6, y + h - 12, "600K", WHITE, 1, True)
     elif kind == "virus":
-        cv.circle(x + w // 2, y + h // 2, 10, (90, 140, 90))
-        for dx, dy in ((-16, -8), (16, -8), (-16, 8), (16, 8), (0, -14)):
-            cv.circle(x + w // 2 + dx, y + h // 2 + dy, 5, (90, 140, 90))
-        cv.text(x + 8, y + h - 14, "12,000+", INK, 1, True)
-    elif kind == "mountain":
-        cv.tri(x + 10, y + h - 8, x + 60, y + 4, x + 110, y + h - 8, (120, 110, 96))
-        cv.tri(x + 90, y + h - 8, x + 130, y + 12, x + 160, y + h - 8, (90, 84, 76))
-        cv.circle(x + 60, y + 8, 5, (255, 255, 255))
-    elif kind == "satellite":
-        cv.rect(x + 66, y + 10, 34, 14, (200, 200, 210))
-        cv.rect(x + 40, y + 12, 24, 10, (40, 90, 160))
-        cv.rect(x + 102, y + 12, 24, 10, (40, 90, 160))
-        cv.line(x + 100, y + 30, x + 130, y + h - 8, (150, 150, 150))
-        cv.text(x + 8, y + h - 14, "500 SATS", INK, 1, True)
+        cv.circle(x + w // 2, y + h // 2, 9, (90, 140, 90))
+        for dx, dy in ((-15, -7), (15, -7), (-15, 7), (15, 7), (0, -12)):
+            cv.circle(x + w // 2 + dx, y + h // 2 + dy, 4, (90, 140, 90))
+        cv.text(x + 6, y + 4, "12,021", INK, 1, True)
+    elif kind == "eu":
+        # 12 stars on an ellipse, offsets hand-computed (no trig needed)
+        for dx, dy in ((52, 0), (45, 6), (26, 10), (0, 11), (-26, 10),
+                       (-45, 6), (-52, 0), (-45, -6), (-26, -10),
+                       (0, -11), (26, -10), (45, -6)):
+            cv.circle(x + w // 2 + dx, y + h // 2 + dy, 2, (255, 210, 90))
+        cv.text(x + 6, y + 4, "NO DEAL", (255, 210, 90), 1, True)
+    elif kind == "pillars":
+        cv.rect(x + 10, y + 4, w - 20, 4, (120, 108, 84))
+        for cx in (30, 66, 102, 138):
+            cv.rect(x + cx, y + 8, 8, h - 16, (120, 108, 84))
+        cv.rect(x + 10, y + h - 8, w - 20, 4, (120, 108, 84))
+        cv.text(x + 6, y + h - 12, "BILL 21", INK, 1, True)
 
 
 # ---------------------------------------------------------------- data
-# (number, region, field, headline, body) for the three heroes.
+# (scene, kicker, headline, body, source) for the three heroes.
 HEROES = [
-    ("drone",
-     "KUWAIT  •  MIDDLE EAST  •  WAR",
-     "Drone strike kills 2 Italians in Kuwait",
-     "Kuwait says an Iranian drone struck a site in the country, "
-     "killing two Italian workers. Iran denies responsibility.",
-     "WHY IT MATTERS  First reported Iranian strike on Kuwaiti "
-     "soil; Gulf tensions rise."),
-    ("storm",
-     "NEW YORK  •  USA  •  WEATHER",
-     "Storms halt Thanksgiving travel; Macy's parade postponed",
-     "A huge storm disrupts Thanksgiving travel across the US. New "
-     "York postpones its 100th Macy's parade for the first time.",
-     "WHY IT MATTERS  80 million Americans were travelling for "
-     "the holiday; 500,000+ lost power."),
-    ("rubble",
-     "GAZA  •  MIDDLE EAST  •  WAR",
-     "Hamas weighs reply after Israel kills 10 in Gaza",
-     "Hamas weighs its response after Israeli strikes kill 10 "
-     "people in Gaza. 16 schoolchildren have died there this month.",
-     "WHY IT MATTERS  The ceasefire is under strain as the "
-     "death toll keeps rising."),
+    ("parliament",
+     "WELLINGTON  •  OCEANIA  •  ELECTION",
+     "Coalition falls one seat short",
+     "Final count: the National-led bloc holds 65 of 130 seats, "
+     "one short of a majority. Newcomer Opportunity's 7 MPs hold "
+     "the balance of power.",
+     "REPORTED  •  Electoral Commission  •  AP  •  Reuters"),
+    ("market",
+     "SHANGHAI  •  EAST ASIA  •  MARKETS",
+     "China stocks leap 4.2% in a day",
+     "CSI 300 jumps 4.2%, its best day in two years, as Beijing "
+     "vows bigger state support. Shanghai +3.7%; STAR 50 +15%.",
+     "REPORTED  •  Reuters"),
+    ("interview",
+     "KYIV  •  EUROPE  •  WAR",
+     "Zelenskyy: Putin can't be a friend",
+     "In a BBC interview, Zelenskyy urges the US to press Putin "
+     "harder, warning that delays to Patriot missiles are costing "
+     "Ukrainian lives.",
+     "ON RECORD  •  BBC  •  AP"),
 ]
 
-# (number, scene kind, kicker, headline, body) for the twelve panels.
+# (number, scene kind, kicker, headline, body, source) for panels 4-13.
 PANELS = [
-    (4, "chart_down", "LONDON  •  MIGRATION",
-     "UK migration falls to lowest since 1997",
-     "Net migration drops to its lowest since 1997, outside the pandemic."),
-    (5, "chess", "CHESS  •  SPORT",
-     "Gukesh, Sindarov draw marathon Game 3",
-     "Nothing separates the pair after three games of the title match."),
-    (6, "podium", "PARIS  •  POLITICS",
-     "France mainstream risks vote debacle",
-     "Macron slams Le Pen as no clear candidate emerges."),
-    (7, "tanker", "IBIZA  •  DISASTER",
-     "Tanker capsizes off Ibiza; 1 killed",
-     "Diesel tanker carrying up to 7,000 tonnes sinks; oil-spill race on."),
-    (8, "court", "PARIS  •  JUSTICE",
-     "Depardieu to stand trial over 2018 rape claim",
-     "Court orders trial for the alleged rape of an actress in 2018."),
-    (9, "rocket", "USA  •  TECH",
-     "Musk: every US child gets 2 SpaceX shares",
-     "Elon Musk says every child in the US will receive two shares."),
-    (10, "chart_up", "WASHINGTON  •  ECONOMY",
-     "Trump seeks probe into 'fake' GDP figures",
-     "Growth revised up to 4.3%; Trump demands an inquiry."),
-    (11, "scales", "NEW DELHI  •  JUSTICE",
-     "India court: judge must sit on PMLA bench",
-     "Top court also quashes ex-MP Anand Mohan's early release."),
-    (12, "flame", "JAZAN  •  WAR",
-     "Jazan refinery attack kills Nepali worker",
-     "Strike on Saudi refinery kills one worker; fire contained."),
-    (13, "virus", "CONGO  •  HEALTH",
-     "Ebola in Congo passes 12,000 cases",
-     "Outbreak grows as unrest forces responders to leave."),
-    (14, "mountain", "NEPAL  •  DISASTER",
-     "Nepal declares 4,000 landslide missing dead",
-     "Missing victims of the landslides formally declared dead."),
-    (15, "satellite", "BELGIUM  •  SPACE",
-     "Europe's biggest satellite factory opens",
-     "Belgian plant can build 500 satellites."),
+    (4, "drones", "UKRAINE  •  WAR",
+     "155 drones fired at Ukraine",
+     "Air defences down 110; hits at 27 sites.",
+     "REPORTED  •  Ukraine Air Force"),
+    (5, "court", "MOMBASA  •  JUSTICE",
+     "Cult chief guilty: 123 dead",
+     "Mackenzie convicted over Shakahola fasts.",
+     "OFFICIAL  •  Court  •  Reuters"),
+    (6, "skater", "TOKYO  •  SPORT",
+     "Malinin sets world record",
+     "114.81 in the short program at NHK Trophy.",
+     "REPORTED  •  AP  •  Reuters"),
+    (7, "tanker", "HORMUZ  •  ENERGY",
+     "Brent nears $98 on mine hits",
+     "Two tankers hit mines, IRGC says; Jazan hit.",
+     "CLAIM  •  IRGC  •  Reuters"),
+    (8, "chart_up", "NEW YORK  •  MARKETS",
+     "Best week in 19 months",
+     "S&P 500 +1.6% to 7,297.49; Nasdaq +2.3%.",
+     "REPORTED  •  AP"),
+    (9, "asia", "ASIA  •  MARKETS",
+     "Asia markets surge on AI",
+     "Nikkei +2.11% to 58,711; Kospi +4.3%.",
+     "REPORTED  •  Yonhap  •  Reuters"),
+    (10, "storm", "NEW YORK  •  WEATHER",
+     "600,000 dark on Black Friday",
+     "Macy's 100th parade moves to Saturday, a first.",
+     "REPORTED  •  NPR  •  Reuters"),
+    (11, "virus", "CONGO  •  HEALTH",
+     "Ebola passes 12,000 cases",
+     "12,021 confirmed; 5,904 dead; fighting hampers response.",
+     "OFFICIAL  •  Health Ministry"),
+    (12, "eu", "BRUSSELS  •  POLITICS",
+     "EU summit ends with no deal",
+     "24 states back a 45bn euro Ukraine loan; talks resume Dec.",
+     "REPORTED  •  Xinhua"),
+    (13, "pillars", "OTTAWA  •  RIGHTS",
+     "Court upholds Quebec Bill 21",
+     "Notwithstanding clause stands; one section struck down.",
+     "OFFICIAL  •  Supreme Court"),
 ]
 
-# (number, place, one-line story) for the twenty more stories.
+# (number, place, one-line story) for the 39 more stories.
 # Kept short on purpose: place + " — " + text must fit one column
-# (about 50 chars at scale 1); the draw loop truncates as a backstop.
+# (about 52 chars at scale 1); the draw loop truncates as a backstop.
 ALSO = [
-    (16, "BLACK FRIDAY", "Half of sale prices no cheaper"),
-    (17, "AI", "Anthropic turns Claude artifacts into apps"),
-    (18, "MALI", "300+ Russians killed backing junta"),
-    (19, "INDIA", "Politician hosts a 400,000-guest wedding"),
-    (20, "GERMANY", "Two Iraqis held over synagogue attack plot"),
-    (21, "NEW ZEALAND", "Coalition keeps 67 of 131 seats"),
-    (22, "USA", "Judge: FCC violated ABC's free speech"),
-    (23, "SAUDI ARABIA", "Riyadh stops two Houthi missiles"),
-    (24, "UKRAINE", "Russian ballistic missiles hit Kyiv"),
-    (25, "PAKISTAN", "Karachi collapse: 3 dead, 14 hurt"),
-    (26, "INDIA", "Cabinet backs Rs 11,000-cr factory scheme"),
-    (27, "TECH", "Nvidia halts chip sales to 4 SE Asian states"),
-    (28, "SOUTH KOREA", "Bank of Korea lifts rates on AI boom"),
-    (29, "NORTH KOREA", "Kim vows permanent nuclear armament"),
-    (30, "THAILAND", "Bangkok oil plant blast prompts evacuation"),
-    (31, "MEDITERRANEAN", "65 terror suspects held in sweep"),
-    (32, "USA", "Flights to Washington DCA grounded in storm"),
-    (33, "FIFA", "Hackers accessed limited personal data"),
-    (34, "RUGBY", "Barrett to captain All Blacks vs England"),
-    (35, "NFL", "Rams beat Packers 26-13; Corum runs 184 yards"),
+    (14, "LONDON", "DWP cyber incident takes benefits offline"),
+    (15, "OSLO", "Norse Atlantic files for bankruptcy"),
+    (16, "MADRID", "Spain campaign ends; vote on Sunday"),
+    (17, "BELGRADE", "Students pick chemist Saicic for president"),
+    (18, "SEOUL", "Seoul returns six North Koreans found adrift"),
+    (19, "MADURAI", "Top court orders lamp lit on disputed hill"),
+    (20, "LUSAIL", "Antonelli fastest in Qatar GP practice"),
+    (21, "MELBOURNE", "North Melbourne win AFLW three-peat, 44-18"),
+    (22, "MARSEILLE", "Fan violence: UEFA opens inquiry"),
+    (23, "EAST DARFUR", "RSF raids kill 14 in Darfur and Kordofan"),
+    (24, "WALLDORF", "SAP weighs 10,000+ job cuts in AI push"),
+    (25, "MARIANA TRENCH", "Deepest eruption found 6.5 km down"),
+    (26, "MEXICO CITY", "Mexico protests US drug tip line"),
+    (27, "BOGOR", "Search ends for 14 lost miners"),
+    (28, "BLACK FRIDAY", "Half of sale prices no cheaper"),
+    (29, "AI", "Anthropic turns Claude artifacts into apps"),
+    (30, "MALI", "300+ Russians killed backing junta"),
+    (31, "INDIA", "Politician hosts a 400,000-guest wedding"),
+    (32, "GERMANY", "Two Iraqis held over synagogue attack plot"),
+    (33, "USA", "Judge: FCC violated ABC's free speech"),
+    (34, "INDIA", "Cabinet backs Rs 11,000-cr factory scheme"),
+    (35, "TECH", "Nvidia halts chip sales to 4 SE Asian states"),
+    (36, "SOUTH KOREA", "Bank of Korea lifts rates on AI boom"),
+    (37, "NORTH KOREA", "Kim vows permanent nuclear armament"),
+    (38, "MEDITERRANEAN", "65 terror suspects held in sweep"),
+    (39, "USA", "Flights to Washington DCA grounded in storm"),
+    (40, "FIFA", "Hackers accessed limited personal data"),
+    (41, "RUGBY", "Barrett to captain All Blacks vs England"),
+    (42, "NFL", "Rams beat Packers 26-13; Corum runs 184 yards"),
+    (43, "CHESS", "Gukesh, Sindarov draw Game 3, 1.5-1.5"),
+    (44, "FRANCE", "Macron slams Le Pen as mainstream falters"),
+    (45, "USA", "Musk: every US child gets 2 SpaceX shares"),
+    (46, "WASHINGTON", "Trump seeks probe into 'fake' GDP"),
+    (47, "NEW DELHI", "India court: judge must sit on PMLA bench"),
+    (48, "NEPAL", "Nepal declares 4,000 landslide missing dead"),
+    (49, "BELGIUM", "Europe's biggest satellite factory opens"),
+    (50, "BERLIN", "Bundestag passes 2027 budget"),
+    (51, "KARACHI", "Collapse toll rises to 6; rescue goes on"),
+    (52, "MAR-A-LAGO", "Trump welcomes Putin to G20"),
 ]
 
 REGIONS = [
-    ("N. AMERICA", 6, (20, 38, 74)), ("EUROPE", 8, (176, 42, 30)),
-    ("MIDDLE EAST", 4, (0, 122, 61)), ("AFRICA", 2, (200, 130, 20)),
-    ("SOUTH ASIA", 5, (150, 60, 140)), ("EAST ASIA", 2, (0, 140, 160)),
-    ("SE ASIA", 2, (200, 90, 0)), ("OCEANIA", 3, (60, 120, 200)),
-    ("GLOBAL", 3, (110, 108, 100)),
+    ("EUROPE", 14, (176, 42, 30)), ("N. AMERICA", 9, (20, 38, 74)),
+    ("EAST ASIA", 6, (0, 140, 160)), ("SOUTH ASIA", 6, (150, 60, 140)),
+    ("OCEANIA", 4, (60, 120, 200)), ("AFRICA", 4, (200, 130, 20)),
+    ("GLOBAL", 4, (110, 108, 100)), ("MIDDLE EAST", 2, (0, 122, 61)),
+    ("SE ASIA", 2, (200, 90, 0)), ("LATIN AMERICA", 1, (90, 140, 90)),
 ]
 
 STATS = [
-    ("2", "Italians killed in the Kuwait drone strike"),
-    ("500K+", "US homes and businesses lose power in the storms"),
-    ("4.3%", "US growth, revised up — Trump calls it 'fake'"),
-    ("12,000", "Ebola cases in Congo, and still rising"),
-    ("400,000", "guests at an Indian politician's wedding"),
+    ("65/130", "NZ coalition seats: one short of a majority"),
+    ("+4.2%", "CSI 300, best day in two years"),
+    ("155", "Russian drones fired at Ukraine overnight"),
+    ("114.81", "Malinin's world-record short program"),
+    ("$97.71", "Brent intraday as Gulf attacks lift oil"),
+    ("12,021", "Ebola cases in Congo, and still rising"),
 ]
 
-# (lon, lat) pins for stories 1-15 on the map (5 has no known venue).
-PINS = {1: (47.5, 29.3), 2: (-74.0, 40.7), 3: (34.5, 31.5), 4: (-0.1, 51.5),
-        6: (2.35, 48.85), 7: (1.4, 38.98), 8: (2.6, 48.9), 9: (-97.7, 30.3),
-        10: (-77.0, 38.9), 11: (77.2, 28.6), 12: (42.5, 16.9),
-        13: (25.0, -2.0), 14: (84.0, 28.0), 15: (4.35, 50.85)}
+# (UTC time, event) for the wire-times strip. Times are the hour the
+# event was reported or the market closed, all on Friday 27 Nov.
+TIMELINE = [
+    ("01:00", "NZ final count"),
+    ("06:00", "Nikkei +2.11%"),
+    ("07:45", "Brent $97.71"),
+    ("11:22", "Zelenskyy to BBC"),
+    ("16:21", "Norse bankrupt"),
+    ("18:00", "S&P 500 +1.60%"),
+]
 
-# Leader offsets (dx, dy) for pins that would collide at this map scale:
-# Europe's pins all fall within a few pixels of each other, and Gaza /
-# Jazan / Delhi crowd the Arabia-India corner, so their numbered discs
-# are pushed apart with a thin leader line back to the true spot.
-PIN_OFFSET = {1: (0, 0), 2: (0, 0), 3: (-12, 10), 4: (-16, -12),
-              6: (-2, -14), 7: (-14, 12), 8: (14, -10), 9: (0, 0),
-              10: (0, 0), 11: (0, 0), 12: (12, 12), 13: (0, 0),
-              14: (10, -12), 15: (16, 10)}
+# (lon, lat) pins for pictured stories 1-13 on the dotted map.
+PINS = {1: (174.8, -41.3), 2: (121.5, 31.2), 3: (30.5, 50.45),
+        4: (36.2, 49.99), 5: (39.7, -4.05), 6: (139.7, 35.7),
+        7: (56.3, 26.6), 8: (-74.0, 40.7), 9: (127.0, 37.5),
+        10: (-77.0, 38.9), 11: (30.25, 1.57), 12: (4.35, 50.85),
+        13: (-75.7, 45.4)}
+
+# Leader offsets (dx, dy) for pins that would collide at map scale.
+PIN_OFFSET = {1: (0, 0), 2: (0, 0), 3: (-14, -10), 4: (12, 12),
+              5: (0, 0), 6: (0, 0), 7: (0, 0), 8: (-12, -10),
+              9: (14, -8), 10: (12, 12), 11: (0, 0), 12: (-14, 10),
+              13: (0, 0)}
 
 # Rough continent outlines in map-panel coordinates (x 0..296, y 0..170).
 CONTINENTS = [
@@ -576,117 +626,149 @@ CONTINENTS = [
 ]
 
 
+def point_in_poly(px, py, poly):
+    """Ray-casting point-in-polygon test."""
+    inside = False
+    n = len(poly)
+    for i in range(n):
+        x0, y0 = poly[i]
+        x1, y1 = poly[(i + 1) % n]
+        if (y0 > py) != (y1 > py):
+            xin = x0 + (py - y0) * (x1 - x0) / (y1 - y0)
+            if px < xin:
+                inside = not inside
+    return inside
+
+
 # ---------------------------------------------------------------- layout
 def draw(cv):
     cv.rect(0, 0, W, H, PAPER)
 
     # --- top bar
     cv.rect(0, 0, W, 24, NAVY)
-    cv.text_c(W // 2, 8, "THE WORLD IN ONE DAY  •  35 STORIES  •  9 REGIONS  •  "
+    cv.text_c(W // 2, 8, "THE WORLD IN ONE DAY  •  52 STORIES  •  10 REGIONS  •  "
               "ALL FIRST REPORTED FRIDAY 27 NOVEMBER 2026", WHITE, 1, True)
 
     # --- masthead
     cv.text_c(W // 2, 30, "Friday 27 November 2026", INK, 6, True)
-    cv.rect(60, 84, W - 120, 3, RED)
+    cv.rect(60, 80, W - 120, 3, RED)
 
     # --- ticker
-    cv.text_c(W // 2, 92,
-              "Kuwait drone strike kills 2  •  Macy's parade postponed  •  "
-              "Hamas weighs Gaza reply", RED, 2, True)
+    cv.text_c(W // 2, 88,
+              "NZ coalition one short  •  China stocks +4.2%  •  "
+              "Zelenskyy: press Putin harder", RED, 2, True)
 
-    # --- region strip
-    x = 8
-    chip_w = (W - 16) // len(REGIONS)
-    for name, n, col in REGIONS:
-        cv.rect(x, 114, chip_w - 3, 20, col)
-        cv.text_c(x + (chip_w - 3) // 2, 120, "%s %d" % (name, n),
-                  WHITE, 1, True)
-        x += chip_w
-
-    # --- five key figures
-    y0 = 140
+    # --- six key figures
+    y0 = 112
     cv.hline(8, y0 - 2, W - 16, INK, 2)
-    bw = (W - 16) // 5
+    bw = (W - 16) // 6
     for i, (num, label) in enumerate(STATS):
         bx = 8 + i * bw
         if i:
-            cv.vline(bx, y0 + 2, 34, GREY, 1)
-        cv.text_c(bx + bw // 2, y0 + 2, num, RED, 3, True)
+            cv.vline(bx, y0 + 2, 52, GREY, 1)
+        cv.text_c(bx + bw // 2, y0 + 2, num, RED, 4, True)
         for j, ln in enumerate(wrap_text(label, bw - 10, 1)):
-            cv.text_c(bx + bw // 2, y0 + 24 + j * 8, ln, INK, 1)
-    cv.hline(8, y0 + 42, W - 16, INK, 2)
+            cv.text_c(bx + bw // 2, y0 + 34 + j * 8, ln, INK, 1)
+    cv.hline(8, y0 + 56, W - 16, INK, 2)
+
+    # --- region strip
+    y0 = 174
+    x = 8
+    chip_w = (W - 16) // len(REGIONS)
+    for name, n, col in REGIONS:
+        cv.rect(x, y0, chip_w - 3, 20, col)
+        cv.text_c(x + (chip_w - 3) // 2, y0 + 6, "%s %d" % (name, n),
+                  WHITE, 1, True)
+        x += chip_w
+
+    # --- wire-times strip
+    y0 = 200
+    cv.text(8, y0 + 2, "WIRE TIMES, UTC", INK, 1, True)
+    tx = 118
+    slot = (W - 8 - tx) // len(TIMELINE)
+    for t, ev in TIMELINE:
+        cv.text(tx, y0 + 2, t, RED, 1, True)
+        cv.text(tx + 36, y0 + 2, ev, INK, 1)
+        tx += slot
+    cv.hline(8, y0 + 18, W - 16, INK, 1)
 
     # --- three hero stories
-    hy, hh = 190, 246
+    hy, hh = 226, 244
     hw = (W - 16 - 12) // 3
-    for i, (scene, kicker, head, body, why) in enumerate(HEROES):
+    for i, (scene, kicker, head, body, src) in enumerate(HEROES):
         hx = 8 + i * (hw + 6)
         cv.rect(hx, hy, hw, hh, WHITE)
-        cv.rect(hx, hy, hw, hh, INK)  # border via outline below
-        cv.rect(hx + 1, hy + 1, hw - 2, hh - 2, WHITE)
+        cv.rect(hx, hy, hw, 1, INK)
+        cv.rect(hx, hy + hh - 1, hw, 1, INK)
+        cv.rect(hx, hy, 1, hh, INK)
+        cv.rect(hx + hw - 1, hy, 1, hh, INK)
         sy = hy + 4
-        if scene == "drone":
-            scene_drone(cv, hx + 4, sy, hw - 8, 104)
-        elif scene == "storm":
-            scene_storm(cv, hx + 4, sy, hw - 8, 104)
+        cv.set_clip(hx + 4, sy, hw - 8, 104)
+        if scene == "parliament":
+            scene_parliament(cv, hx + 4, sy, hw - 8, 104)
+        elif scene == "market":
+            scene_market(cv, hx + 4, sy, hw - 8, 104)
         else:
-            scene_rubble(cv, hx + 4, sy, hw - 8, 104)
+            scene_interview(cv, hx + 4, sy, hw - 8, 104)
+        cv.clear_clip()
         ty = sy + 108
         cv.rect(hx + 4, ty, 22, 14, RED)
         cv.text(hx + 7, ty + 3, str(i + 1), WHITE, 1, True)
         cv.text(hx + 30, ty + 3, kicker, RED, 1, True)
         ty += 18
-        for ln in wrap_text(head, hw - 12, 2):
-            cv.text(hx + 6, ty, ln, INK, 2, True)
-            ty += 16
+        for ln in wrap_text(head, hw - 12, 3):
+            cv.text(hx + 6, ty, ln, INK, 3, True)
+            ty += 24
         ty += 2
-        for ln in wrap_text(body, hw - 12, 1):
+        for ln in wrap_text(body, hw - 12, 1)[:3]:
             cv.text(hx + 6, ty, ln, INK, 1)
             ty += 8
         ty += 4
-        for ln in wrap_text(why, hw - 12, 1):
-            cv.text(hx + 6, ty, ln, GREY, 1)
-            ty += 8
-        cv.hline(hx, hy + hh, hw, INK, 1)
+        cv.text(hx + 6, ty, src, GREY, 1)
 
-    # --- twelve small panels, 6 x 2
-    gy = 446
-    pw, ph = 166, 124
-    for idx, (num, kind, kicker, head, body) in enumerate(PANELS):
-        px = 4 + (idx % 6) * (pw + 4)
-        py = gy + (idx // 6) * (ph + 6)
+    # --- ten pictured panels, 5 x 2
+    gy = 478
+    pw, ph = 200, 128
+    for idx, (num, kind, kicker, head, body, src) in enumerate(PANELS):
+        px = 4 + (idx % 5) * (pw + 4)
+        py = gy + (idx // 5) * (ph + 4)
         cv.rect(px, py, pw, ph, WHITE)
         cv.rect(px, py, pw, 1, INK)
         cv.rect(px, py + ph - 1, pw, 1, INK)
         cv.rect(px, py, 1, ph, INK)
         cv.rect(px + pw - 1, py, 1, ph, INK)
+        cv.set_clip(px + 3, py + 3, pw - 6, 34)
         scene_mini(cv, kind, px + 3, py + 3, pw - 6, 34)
+        cv.clear_clip()
         ty = py + 40
         cv.rect(px + 3, ty, 16, 12, NAVY)
         cv.text(px + 5, ty + 2, str(num), WHITE, 1, True)
         cv.text(px + 22, ty + 2, kicker, RED, 1, True)
         ty += 15
-        for ln in wrap_text(head, pw - 8, 1):
-            cv.text(px + 4, ty, ln, INK, 1, True)
-            ty += 8
+        for ln in wrap_text(head, pw - 8, 2)[:2]:
+            cv.text(px + 4, ty, ln, INK, 2, True)
+            ty += 15
         ty += 1
-        for ln in wrap_text(body, pw - 8, 1):
+        for ln in wrap_text(body, pw - 8, 1)[:2]:
             cv.text(px + 4, ty, ln, INK, 1)
             ty += 8
+        cv.text(px + 4, py + ph - 12, src, GREY, 1)
 
-    # --- map + also list
-    my = 710
-    mh = 268
+    # --- dotted map + also list
+    my = 746
+    mh = 232
     cv.rect(4, my, 296, mh, WHITE)
     cv.rect(4, my, 296, 1, INK)
     cv.rect(4, my + mh - 1, 296, 1, INK)
     cv.rect(4, my, 1, mh, INK)
     cv.rect(299, my, 1, mh, INK)
     cv.text(12, my + 6, "WHERE IT HAPPENED", INK, 1, True)
-    cv.text(12, my + 16, "dots = story numbers 1-15", GREY, 1)
+    cv.text(12, my + 16, "dots = story numbers 1-13", GREY, 1)
     mx, myy = 4, my + 28
-    for pts in CONTINENTS:
-        cv.poly([(mx + px, myy + py) for px, py in pts], (206, 196, 172))
+    for gy2 in range(0, 170, 7):
+        for gx2 in range(0, 296, 7):
+            if any(point_in_poly(gx2, gy2, poly) for poly in CONTINENTS):
+                cv.rect(mx + gx2, myy + gy2, 2, 2, (150, 142, 122))
     for num, (lon, lat) in sorted(PINS.items()):
         px = mx + int((lon + 180) / 360.0 * 296)
         py = myy + int((75 - lat) / 130.0 * 170)
@@ -697,28 +779,30 @@ def draw(cv):
         cv.circle(px + dx, py + dy, 7, RED)
         cv.text(px + dx - 2 if num < 10 else px + dx - 5, py + dy - 3,
                 str(num), WHITE, 1, True)
-    cv.text(12, my + mh - 26, "5: title match — venue not stated", GREY, 1)
-    cv.text(12, my + mh - 16, "in the wires; no pin drawn.", GREY, 1)
+    cv.text(12, my + mh - 30,
+            "HOW SURE: REPORTED = the day's wires;", GREY, 1)
+    cv.text(12, my + mh - 20,
+            "CLAIM = one side, unconfirmed; OFFICIAL =", GREY, 1)
+    cv.text(12, my + mh - 10,
+            "authority's own count or ruling.", GREY, 1)
 
     ax = 312
-    cv.text(ax, my + 6, "ALSO ON FRIDAY 27 NOVEMBER — 20 MORE STORIES",
+    cv.text(ax, my + 6, "ALSO ON FRIDAY 27 NOVEMBER — 39 MORE STORIES",
             INK, 1, True)
     cv.hline(ax, my + 18, W - ax - 8, INK, 2)
     col_w = (W - ax - 8) // 2
     for idx, (num, place, text) in enumerate(ALSO):
-        col = idx // 10
-        row = idx % 10
+        col = idx // 20
+        row = idx % 20
         lx = ax + col * col_w
-        ly = my + 26 + row * 24
-        cv.rect(lx, ly, 20, 13, NAVY)
-        cv.text(lx + 3 if num < 10 else lx + 1, ly + 3, str(num),
+        ly = my + 26 + row * 10
+        cv.rect(lx, ly, 18, 10, NAVY)
+        cv.text(lx + 2 if num < 10 else lx + 1, ly + 2, str(num),
                 WHITE, 1, True)
         line = place + " — " + text
-        while text_w(line, 1) > col_w - 28 and " " in line:
+        while text_w(line, 1) > col_w - 24 and " " in line:
             line = line.rsplit(" ", 1)[0]
-        cv.text(lx + 24, ly + 3, line, INK, 1)
-        if ly + 22 > my + mh - 6:
-            pass
+        cv.text(lx + 22, ly + 2, line, INK, 1)
 
     # --- footer
     fy = 986
@@ -727,11 +811,14 @@ def draw(cv):
             "DATE CHECK  Every story above happened or was first reported "
             "on Friday 27 November 2026.", WHITE, 1, True)
     cv.text(8, fy + 15,
-            "NOT 27 NOV: US tariff plan on 14 economies (25 Nov)  •  "
-            "Champions League results (25-26 Nov).", (200, 205, 215), 1)
+            "NOT 27 NOV: Kuwait drone strike kills 2 (Thu 26)  •  Gaza "
+            "strikes kill 10 (Thu 26)  •  Ibiza tanker sinks, 1 dead "
+            "(Thu 26)  •  Bangkok refinery blast (Thu 26)", (200, 205, 215), 1)
     cv.text(8, fy + 25,
-            "Sources: BBC, Reuters, AP, NYT, NDTV, India Today, The Hindu, "
-            "Newstalk ZB. Every drawing original.", (200, 205, 215), 1)
+            "NOT 27 NOV: Depardieu sent to trial (Thu 26)  •  ONS "
+            "migration 77,000 (Thu 26)  •  Karachi collapse (Wed 25)  •  "
+            "US tariff plan (25 Nov)  •  Sources: AP, Reuters, BBC.",
+            (200, 205, 215), 1)
 
 
 def main():
